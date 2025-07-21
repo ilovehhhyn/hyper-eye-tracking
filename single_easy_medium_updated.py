@@ -496,14 +496,15 @@ class MemoryGame:
                     core.quit()
                 return keys[0], response_timer.getTime()
             core.wait(0.01)
-    
+        
+    # Modified run_trial method with stage timing
     def run_trial(self, difficulty):
-        """Run a single trial with eye tracking"""
+        """Run a single trial with eye tracking and stage timing"""
         # Send trial start message to EyeLink
         self.el_tracker.sendMessage(f"TRIAL_START {self.current_round} {difficulty}")
         
-        # Select random condition
-        condition = random.choice(self.conditions)
+        # Select random condition based on difficulty
+        condition = random.choice(self.conditions[difficulty])
         
         # Create grid from condition
         grid_images, grid_image_indices = self._create_grid_from_condition(condition, difficulty)
@@ -520,10 +521,15 @@ class MemoryGame:
                 correct_key = key
                 break
         
-        # Send grid display message
+        # STAGE 1: GRID DISPLAY PHASE - Record start time
+        stage1_start_time = core.getTime()
+        stage1_start_timestamp = datetime.now()
+        
+        # Send grid display message with precise timing
+        self.el_tracker.sendMessage(f"STAGE1_START trial_{self.current_round} time_{stage1_start_time:.6f}")
         self.el_tracker.sendMessage(f"GRID_DISPLAY_START target_pos_{target_index} target_cat_{target_category}")
         
-        # Display images for 5 seconds with gaze tracking
+        # Display images for DISPLAY_TIME seconds with gaze tracking
         display_timer = core.Clock()
         while display_timer.getTime() < DISPLAY_TIME:
             self.win.clearBuffer()
@@ -531,7 +537,13 @@ class MemoryGame:
             self.win.flip()
             core.wait(0.016)  # ~60 FPS
         
-        # Send grid display end message
+        # STAGE 1: GRID DISPLAY PHASE - Record end time
+        stage1_end_time = core.getTime()
+        stage1_end_timestamp = datetime.now()
+        stage1_duration = stage1_end_time - stage1_start_time
+        
+        # Send grid display end message with precise timing
+        self.el_tracker.sendMessage(f"STAGE1_END trial_{self.current_round} time_{stage1_end_time:.6f} duration_{stage1_duration:.6f}")
         self.el_tracker.sendMessage("GRID_DISPLAY_END")
         
         # Display covers with question mark and get response
@@ -550,7 +562,8 @@ class MemoryGame:
         self.win.flip()
         
         # Send response phase message
-        self.el_tracker.sendMessage("RESPONSE_START")
+        response_start_time = core.getTime()
+        self.el_tracker.sendMessage(f"RESPONSE_START time_{response_start_time:.6f}")
         
         # Get response and measure time
         user_response, response_time = self._get_user_response()
@@ -571,7 +584,7 @@ class MemoryGame:
         # Send trial result message
         self.el_tracker.sendMessage(f"TRIAL_RESULT {'CORRECT' if correct else 'INCORRECT'}")
         
-        # Record trial data
+        # Record trial data WITH STAGE 1 TIMING
         trial_record = {
             'trial': self.current_round,
             'difficulty': difficulty,
@@ -583,7 +596,13 @@ class MemoryGame:
             'user_response': user_response,
             'response_time': response_time,
             'correct': correct,
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now().isoformat(),
+            # NEW STAGE 1 TIMING FIELDS
+            'stage1_start_time': stage1_start_time,
+            'stage1_end_time': stage1_end_time,
+            'stage1_start_timestamp': stage1_start_timestamp.isoformat(),
+            'stage1_end_timestamp': stage1_end_timestamp.isoformat(),
+            'stage1_duration': stage1_duration
         }
         self.trial_data.append(trial_record)
         
@@ -612,6 +631,7 @@ class MemoryGame:
         
         return correct
     
+    # Also need to update the _save_data method to include new fields:
     def _save_data(self):
         """Save trial data to CSV file"""
         if not self.trial_data:
@@ -619,13 +639,16 @@ class MemoryGame:
         
         # Create filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"memory_game_data_{timestamp}.csv"
+        filename = f"memory_game_hard_data_{timestamp}.csv"
         
-        # Define CSV columns
+        # Define CSV columns - UPDATED to include stage timing
         fieldnames = [
             'trial', 'difficulty', 'condition', 'target_category', 
             'target_image_index', 'target_position', 'correct_key', 
-            'user_response', 'response_time', 'correct', 'timestamp'
+            'user_response', 'response_time', 'correct', 'timestamp',
+            # NEW STAGE 1 TIMING FIELDS
+            'stage1_start_time', 'stage1_end_time', 
+            'stage1_start_timestamp', 'stage1_end_timestamp', 'stage1_duration'
         ]
         
         try:
