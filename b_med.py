@@ -1067,7 +1067,7 @@ def run_synchronized_experiment():
                
                 # Display grid for 5 seconds WITH gaze sharing
                 stage_clock = core.Clock()
-                while stage_clock.getTime() < 5.0:
+                while stage_clock.getTime() < 7.0:
                     update_local_gaze_display()
                     update_remote_gaze_display()
                    
@@ -1077,7 +1077,7 @@ def run_synchronized_experiment():
                    
                     # Draw grid
                     draw_study_grid()
-                    stage_text.setText(f"Trial {current_trial} - Study the grid ({5.0 - stage_clock.getTime():.1f}s)")
+                    stage_text.setText(f"Trial {current_trial} - Study the grid ({7.0 - stage_clock.getTime():.1f}s)")
                     stage_text.draw()
 
                     # Draw gaze markers
