@@ -1121,7 +1121,7 @@ def run_synchronized_experiment():
            
             # Draw grid
             draw_study_grid()
-            stage_text.setText(f"Trial {current_trial} - Study the grid ({5.0 - stage_clock.getTime():.1f}s)")
+            stage_text.setText(f"Trial {current_trial} - Study the grid ({7.0 - stage_clock.getTime():.1f}s)")
             stage_text.draw()
 
             # Draw gaze markers (only when sharing is active)
