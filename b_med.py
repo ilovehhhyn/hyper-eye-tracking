@@ -857,9 +857,6 @@ def create_synchronized_grid(condition_array, seed):
     """Create 8x8 grid from condition array using shared seed"""
     global grid_stimuli, grid_covers, grid_positions, target_cover, cell_size
    
-    # Set random seed for consistent image selection
-    random.seed(seed)
-   
     # Clear previous grid data
     grid_stimuli = []
     grid_covers = []
@@ -886,13 +883,24 @@ def create_synchronized_grid(condition_array, seed):
     # Medium difficulty: condition is a 16-element array representing 4x4 pattern
     condition_categories = [CATEGORY_MAP[num] for num in condition_array]
    
-    # Select one random image from each category for this round
+    # ========== SYNCHRONIZED IMAGE SELECTION ==========
+    # Get unique categories and sort them for consistent ordering across computers
+    unique_categories = sorted(list(set(condition_categories)))
+    
+    # Generate deterministic image selections for each category
     selected_images = {}
-    for category in set(condition_categories):
+    for i, category in enumerate(unique_categories):
         if len(images[category]) > 0:
+            # Use seed + category-specific offset for deterministic selection
+            image_seed = seed + hash(category) % 10000  # Hash category name for consistent offset
+            random.seed(image_seed)
             selected_images[category] = random.randint(0, len(images[category]) - 1)
         else:
             selected_images[category] = 0
+    
+    # Reset to original seed for any remaining grid operations
+    random.seed(seed)
+    # ====================================================
    
     # Each position in 4x4 becomes a 2x2 block in 8x8
     for med_row in range(4):
