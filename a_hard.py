@@ -1111,7 +1111,7 @@ def run_synchronized_experiment():
        
         # Display grid for 5 seconds WITH gaze sharing
         stage_clock = core.Clock()
-        while stage_clock.getTime() < 5.0:
+        while stage_clock.getTime() < 7.0:
             update_local_gaze_display()
             update_remote_gaze_display()
            
